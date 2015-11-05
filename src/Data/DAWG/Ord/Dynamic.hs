@@ -9,11 +9,17 @@ module Data.DAWG.Ord.Dynamic
 (
 -- * DAWG type
   DAWG
+, root
 
 -- * Query
 , lookup
 , numStates
 , numEdges
+
+-- * Traversal
+, value
+, edges
+, follow
 
 -- * Construction
 , empty
@@ -29,12 +35,14 @@ module Data.DAWG.Ord.Dynamic
 ) where
 
 
-import Prelude hiding (lookup)
-import Data.List (foldl')
+import           Prelude hiding (lookup)
+import           Data.List (foldl')
+import           Control.Arrow (first)
 import qualified Control.Monad.State.Strict as S
 
 import qualified Data.Map.Strict as M
 
+import           Data.DAWG.Gen.Types
 import qualified Data.DAWG.Int.Dynamic as D
 
 
@@ -46,12 +54,17 @@ import qualified Data.DAWG.Int.Dynamic as D
 -- | A directed acyclic word graph with type @a@ representing the
 -- type of alphabet elements and type @b@ -- the type of values.
 data DAWG a b = DAWG
-    { intDAWG   :: D.DAWG Int
+    { intDAWG   :: D.DAWG Sym
     , symMap    :: M.Map a Int
     , symMapR   :: M.Map Int a
     , valMap    :: M.Map b Int
     , valMapR   :: M.Map Int b
     } deriving (Show, Eq, Ord)
+
+
+-- | Root of the DAWG.
+root :: DAWG a b -> ID
+root = D.root . intDAWG
 
 
 ------------------------------------------------------------
@@ -186,3 +199,29 @@ fromList xs =
 -- the @()@ value.
 fromLang :: Ord a => [[a]] -> DAWG a ()
 fromLang xs = fromList [(x, ()) | x <- xs]
+
+
+------------------------------------------------------------
+-- Traversal
+------------------------------------------------------------
+
+
+-- | Value stored in the given node.
+value :: ID -> DAWG a b -> Maybe b
+value i DAWG{..}  = do
+    x <- D.value i intDAWG
+    M.lookup x valMapR
+
+
+-- | A list of outgoing edges.
+edges :: ID -> DAWG a b -> [(a, ID)]
+edges i DAWG{..} = map
+    (first (symMapR M.!))
+    (D.edges i intDAWG)
+
+
+-- | Follow the given transition from the given state.
+follow :: Ord a => ID -> a -> DAWG a b -> Maybe ID
+follow i x DAWG{..} = do
+    y <- M.lookup x symMap
+    D.follow i y intDAWG

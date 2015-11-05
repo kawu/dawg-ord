@@ -10,12 +10,17 @@
 module Data.DAWG.Int.Dynamic
 (
 -- * DAWG type
-  DAWG
+  DAWG (root)
 
 -- * Query
 , lookup
 , numStates
 , numEdges
+
+-- * Traversal
+, value
+, edges
+, follow
 
 -- * Construction
 , empty
@@ -138,17 +143,17 @@ deleteM [] i = do
 
 
 -- | Follow the path from the given identifier.
-follow :: [Sym] -> ID -> MaybeT GraphM ID
-follow (x:xs) i = do
+followPath :: [Sym] -> ID -> MaybeT GraphM ID
+followPath (x:xs) i = do
     n <- lift $ nodeBy i
     j <- liftMaybe $ N.onSym x n
-    follow xs j
-follow [] i = return i
+    followPath xs j
+followPath [] i = return i
     
 
 lookupM :: [Sym] -> ID -> GraphM (Maybe Val)
 lookupM xs i = runMaybeT $ do
-    j <- follow xs i
+    j <- followPath xs i
     MaybeT $ N.value <$> nodeBy j
 
 
@@ -289,9 +294,35 @@ fromLang xs = fromList [(x, 0) | x <- xs]
 {-# SPECIALIZE fromLang :: [String] -> DAWG Char #-}
 
 
-----------------
+------------------------------------------------------------
+-- Traversal
+------------------------------------------------------------
+
+
+-- | A list of outgoing edges.
+edges :: Enum a => ID -> DAWG a -> [(a, ID)]
+edges i
+    = map (first toEnum)
+    . N.edges . G.nodeBy i
+    . graph
+{-# SPECIALIZE edges :: ID -> DAWG Char -> [(Char, ID)] #-}
+{-# SPECIALIZE edges :: ID -> DAWG Int  -> [(Int, ID)]  #-}
+
+
+-- | Value stored in the given state.
+value :: ID -> DAWG a -> Maybe Val
+value i = N.value . G.nodeBy i . graph
+
+
+-- | Follow the given transition from the given state.
+follow :: Enum a => ID -> a -> DAWG a -> Maybe ID
+follow i x DAWG{..} = flip S.evalState graph $ runMaybeT $
+    followPath [fromEnum x] i
+
+
+------------------------------------------------------------
 -- Misc
-----------------
+------------------------------------------------------------
 
 
 liftMaybe :: Monad m => Maybe a -> MaybeT m a

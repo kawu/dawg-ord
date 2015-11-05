@@ -29,7 +29,7 @@ import qualified Data.DAWG.Gen.Trans.Hashed as H
 -- iff they are equal with respect to their values and outgoing
 -- edges.
 data Node = Node {
-    -- | Epsilon transition.
+    -- | Value stored in the node.
       value    :: !(Maybe Val)
     -- | Transition map (outgoing edges).
     , transMap :: !(H.Hashed Trans)
