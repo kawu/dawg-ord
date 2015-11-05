@@ -1,11 +1,13 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DoAndIfThenElse #-}
 
+
 -- | Internal representation of the "Data.DAWG" automaton.  Names in this
 -- module correspond to a graphical representation of automaton: nodes refer
 -- to states and edges refer to transitions.
 
-module Data.DAWG.Graph
+
+module Data.DAWG.Gen.Graph
 ( Graph (..)
 , empty
 , size
@@ -15,15 +17,16 @@ module Data.DAWG.Graph
 , delete
 ) where
 
+
 import Control.Applicative ((<$>), (<*>))
 import Data.Binary (Binary, put, get)
 import qualified Data.IntSet as S
 import qualified Data.IntMap as M
 
-import Data.DAWG.HashMap (Hash)
-import qualified Data.DAWG.HashMap as H
+import           Data.DAWG.Gen.Types (ID)
+import           Data.DAWG.Gen.HashMap (Hash)
+import qualified Data.DAWG.Gen.HashMap as H
 
-type ID = Int
 
 -- | A set of nodes.  To every node a unique identifier is assigned.
 -- Invariants: 

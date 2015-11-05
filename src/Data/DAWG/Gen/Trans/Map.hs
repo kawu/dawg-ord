@@ -1,22 +1,27 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
+
 -- | Implementation of a transition map build on top of the "M.Map" container.
 
-module Data.DAWG.Trans.Map
+
+module Data.DAWG.Gen.Trans.Map
 ( Trans (unTrans)
 ) where
+
 
 import Prelude hiding (lookup)
 import Data.Binary (Binary)
 import qualified Data.Map as M
 
-import Data.DAWG.Types
-import qualified Data.DAWG.Trans as C
+import Data.DAWG.Gen.Types
+import qualified Data.DAWG.Gen.Trans as C
+
 
 -- | A vector of distinct key/value pairs strictly ascending with respect
 -- to key values.
 newtype Trans = Trans { unTrans :: M.Map Sym ID }
     deriving (Show, Eq, Ord, Binary)
+
 
 instance C.Trans Trans where
     empty = Trans M.empty

@@ -2,7 +2,7 @@
 
 -- | Internal representation of dynamic automata nodes.
 
-module Data.DAWG.Dynamic.Node
+module Data.DAWG.Ord.Dynamic.Node
 ( Node(..)
 , onSym
 , edges
@@ -13,12 +13,12 @@ module Data.DAWG.Dynamic.Node
 import Control.Applicative ((<$>), (<*>))
 import Data.Binary (Binary, Get, put, get)
 
-import Data.DAWG.Types
-import Data.DAWG.Util (combine)
-import Data.DAWG.HashMap (Hash, hash)
-import Data.DAWG.Trans.Map (Trans)
-import qualified Data.DAWG.Trans as T
-import qualified Data.DAWG.Trans.Hashed as H
+import Data.DAWG.Ord.Types
+import Data.DAWG.Ord.Util (combine)
+import Data.DAWG.Ord.HashMap (Hash, hash)
+import Data.DAWG.Ord.Trans.Map (Trans)
+import qualified Data.DAWG.Ord.Trans as T
+import qualified Data.DAWG.Ord.Trans.Hashed as H
 
 -- | Two nodes (states) belong to the same equivalence class (and,
 -- consequently, they must be represented as one node in the graph)

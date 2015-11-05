@@ -43,12 +43,12 @@ import qualified Control.Monad.State.Strict as S
 import           Control.Monad.Trans.Maybe
 import           Control.Monad.Trans.Class
 
-import Data.DAWG.Types
-import Data.DAWG.Graph (Graph)
-import Data.DAWG.Dynamic.Internal
-import qualified Data.DAWG.Trans as T
-import qualified Data.DAWG.Graph as G
-import qualified Data.DAWG.Dynamic.Node as N
+import           Data.DAWG.Ord.Types
+import           Data.DAWG.Ord.Graph (Graph)
+import           Data.DAWG.Ord.Dynamic.Internal
+import qualified Data.DAWG.Ord.Trans as T
+import qualified Data.DAWG.Ord.Graph as G
+import qualified Data.DAWG.Ord.Dynamic.Node as N
 
 
 type GraphM a = S.State (Graph (N.Node a))

@@ -3,7 +3,7 @@
 
 -- | Utility functions.
 
-module Data.DAWG.Util
+module Data.DAWG.Gen.Util
 ( binarySearch
 , findLastLE
 , combine

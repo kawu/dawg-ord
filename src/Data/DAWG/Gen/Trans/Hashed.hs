@@ -2,19 +2,23 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
 
+
 -- | Transition map with a hash.
 
-module Data.DAWG.Trans.Hashed
+
+module Data.DAWG.Gen.Trans.Hashed
 ( Hashed (..)
 ) where
 
-import Prelude hiding (lookup)
-import Control.Applicative ((<$>), (<*>))
-import Data.DAWG.Util (combine)
-import Data.Binary (Binary, put, get)
-import Data.DAWG.Trans
-import qualified Data.DAWG.Trans.Map as M
-import qualified Data.DAWG.Trans.Vector as V
+
+import           Prelude hiding (lookup)
+import           Control.Applicative ((<$>), (<*>))
+import           Data.DAWG.Gen.Util (combine)
+import           Data.Binary (Binary, put, get)
+import           Data.DAWG.Gen.Trans
+import qualified Data.DAWG.Gen.Trans.Map as M
+import qualified Data.DAWG.Gen.Trans.Vector as V
+
 
 -- | Hash of a transition map is a sum of element-wise hashes.
 -- Hash for a given element @(Sym, ID)@ is equal to @combine Sym ID@.
@@ -26,6 +30,7 @@ data Hashed t = Hashed
 instance Binary t => Binary (Hashed t) where
     put Hashed{..} = put hash >> put trans
     get = Hashed <$> get <*> get
+
 
 instance Trans t => Trans (Hashed t) where
     empty       = Hashed 0 empty

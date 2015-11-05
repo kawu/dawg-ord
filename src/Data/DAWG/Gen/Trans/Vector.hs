@@ -1,13 +1,16 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
+
 -- | A vector representation of a transition map.  Memory efficient, but the
 -- insert operation is /O(n)/ with respect to the number of transitions.
 -- In particular, complexity of the insert operation can make the construction
 -- of a large-alphabet dictionary intractable.
 
-module Data.DAWG.Trans.Vector
+
+module Data.DAWG.Gen.Trans.Vector
 ( Trans (unTrans)
 ) where
+
 
 import Prelude hiding (lookup)
 import Control.Applicative ((<$>))
@@ -17,14 +20,16 @@ import qualified Data.IntMap as M
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Unboxed.Mutable as UM
 
-import Data.DAWG.Types
-import Data.DAWG.Util
-import qualified Data.DAWG.Trans as C
+import Data.DAWG.Gen.Types
+import Data.DAWG.Gen.Util
+import qualified Data.DAWG.Gen.Trans as C
+
 
 -- | A vector of distinct key/value pairs strictly ascending with respect
 -- to key values.
 newtype Trans = Trans { unTrans :: U.Vector (Sym, ID) }
     deriving (Show, Eq, Ord, Binary)
+
 
 instance C.Trans Trans where
     empty = Trans U.empty

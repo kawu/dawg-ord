@@ -1,11 +1,14 @@
 -- | The module provides an abstraction over transition maps from
 -- alphabet symbols to node identifiers.
 
-module Data.DAWG.Trans
+
+module Data.DAWG.Gen.Trans
 ( Trans (..)
 ) where
 
-import Data.DAWG.Types
+
+import Data.DAWG.Gen.Types
+
 
 -- | Abstraction over transition maps from alphabet symbols to
 -- node identifiers.
