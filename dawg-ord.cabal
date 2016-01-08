@@ -2,12 +2,11 @@ name:               dawg-ord
 version:            0.3.1
 synopsis:           Directed acyclic word graphs
 description:
-    The library implements /directed acyclic word graphs/ (DAWGs)
-    internally represented as /minimal acyclic deterministic
-    finite-state automata/.
+    The library implements /directed acyclic word graphs/ (DAWGs) internally
+    represented as /minimal acyclic deterministic finite-state automata/.
     .
     The library allows to build DAWGs from words over any alphabet
-    providing an `Ord` instance.
+    providing an `Ord` instance (see the `Data.DAWG.Ord` module).
     It also provides a fast insert operation which can be used to
     build DAWGs on-the-fly.
 license:            BSD3
