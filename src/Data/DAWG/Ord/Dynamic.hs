@@ -48,7 +48,7 @@ import qualified Data.DAWG.Int.Dynamic as D
 ------------------------------------------------------------
 
 
--- | A directed acyclic word graph with type @a@ representing the
+-- | A directed acyclic word graph with type `a` representing the
 -- type of alphabet elements.
 data DAWG a = DAWG
     { intDAWG   :: D.DAWG Sym
@@ -114,7 +114,7 @@ numEdges :: DAWG a -> Int
 numEdges = D.numEdges . intDAWG
 
 
--- | Insert the (key, value) pair into the DAWG.
+-- | Insert the word into the DAWG.
 insert :: (Ord a) => [a] -> DAWG a -> DAWG a
 insert xs0 dag0 = snd $ flip runDM dag0 $ do
     xs <- addKey xs0
@@ -143,14 +143,14 @@ insert xs0 dag0 = snd $ flip runDM dag0 $ do
 -- {-# SPECIALIZE delete :: Ord b => String -> DAWG Char b -> DAWG Char b #-}
 
 
--- | Find value associated with the key.
+-- | Is the word a member of the DAWG?
 member :: (Ord a) => [a] -> DAWG a -> Bool
 member xs0 DAWG{..} = justTrue $ do
     xs <- mapM (`M.lookup` symMap) xs0
     return $ D.member xs intDAWG
 
 
--- | Return all key/value pairs in the DAWG in ascending key order.
+-- | Return all keys in the DAWG in ascending key order.
 keys :: DAWG a -> [[a]]
 keys DAWG{..} =
     [ decodeKey xs
@@ -160,7 +160,7 @@ keys DAWG{..} =
     decodeSym x = symMapR M.! x
 
 
--- | Construct DAWG from the list of (word, value) pairs.
+-- | Construct DAWG from the list of words.
 fromList :: (Ord a) => [[a]] -> DAWG a
 fromList xs =
     let update t x = insert x t
@@ -172,7 +172,7 @@ fromList xs =
 ------------------------------------------------------------
 
 
--- | Value stored in the given node.
+-- | Does the identifer represent an accepting state?
 accept :: ID -> DAWG a -> Bool
 accept i DAWG{..} = D.accept i intDAWG
 

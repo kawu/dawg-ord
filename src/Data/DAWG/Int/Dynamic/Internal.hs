@@ -20,6 +20,7 @@ import qualified Data.DAWG.Int.Dynamic.Node as N
 -- representing the type of alphabet elements.
 data DAWG a = DAWG
     { graph :: !(Graph N.Node)
+    -- | Foot of the DAWG.
     , root  :: !ID }
     deriving (Show, Eq, Ord)
 

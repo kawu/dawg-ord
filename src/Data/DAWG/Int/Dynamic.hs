@@ -27,8 +27,6 @@ module Data.DAWG.Int.Dynamic
 , fromList
 -- ** Insertion
 , insert
--- ** Deletion
--- , delete
 
 -- * Conversion
 , keys
@@ -189,7 +187,7 @@ numEdges :: DAWG a -> Int
 numEdges = sum . map (length . N.edges) . G.nodes . graph
 
 
--- | Insert the (key, value) pair into the DAWG.
+-- | Insert the word into the DAWG.
 insert :: Enum a => [a] -> DAWG a -> DAWG a
 insert xs' d =
     let xs = map fromEnum xs'
@@ -207,7 +205,7 @@ insert xs' d =
 -- {-# SPECIALIZE delete :: String -> DAWG Char -> DAWG Char #-}
 
 
--- | Find value associated with the key.
+-- | Is the word a member of the DAWG?
 member :: Enum a => [a] -> DAWG a -> Bool
 member xs' d =
     let xs = map fromEnum xs'
@@ -228,7 +226,7 @@ member xs' d =
 --     -> [(String, b)] #-}
 
 
--- | Return all key/value pairs in the DAWG in ascending key order.
+-- | Return all keys in the DAWG in ascending key order.
 keys :: Enum a => DAWG a -> [[a]]
 keys
     = map (map toEnum)
@@ -236,7 +234,7 @@ keys
 {-# SPECIALIZE keys :: DAWG Char -> [String] #-}
 
 
--- | Construct DAWG from the list of (word, value) pairs.
+-- | Construct DAWG from the list of words.
 fromList :: Enum a => [[a]] -> DAWG a
 fromList xs =
     let update t x = insert x t
@@ -259,7 +257,7 @@ edges i
 {-# SPECIALIZE edges :: ID -> DAWG Int  -> [(Int, ID)]  #-}
 
 
--- | Value stored in the given state.
+-- | Does the identifer represent an accepting state?
 accept :: ID -> DAWG a -> Bool
 accept i = N.accept . G.nodeBy i . graph
 
