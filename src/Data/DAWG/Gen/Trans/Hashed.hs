@@ -12,9 +12,9 @@ module Data.DAWG.Gen.Trans.Hashed
 
 
 import           Prelude hiding (lookup)
-import           Control.Applicative ((<$>), (<*>))
+-- import           Control.Applicative ((<$>), (<*>))
 import           Data.DAWG.Gen.Util (combine)
-import           Data.Binary (Binary, put, get)
+-- import           Data.Binary (Binary, put, get)
 import           Data.DAWG.Gen.Trans
 import qualified Data.DAWG.Gen.Trans.Map as M
 import qualified Data.DAWG.Gen.Trans.Vector as V
@@ -27,23 +27,23 @@ data Hashed t = Hashed
     , trans :: !t }
     deriving (Show)
 
-instance Binary t => Binary (Hashed t) where
-    put Hashed{..} = put hash >> put trans
-    get = Hashed <$> get <*> get
+-- instance Binary t => Binary (Hashed t) where
+--     put Hashed{..} = put hash >> put trans
+--     get = Hashed <$> get <*> get
 
 
 instance Trans t => Trans (Hashed t) where
     empty       = Hashed 0 empty
-    {-# INLINE empty #-} 
+    {-# INLINE empty #-}
 
     lookup x    = lookup x . trans
-    {-# INLINE lookup #-} 
+    {-# INLINE lookup #-}
 
     index x     = index x . trans
-    {-# INLINE index #-} 
+    {-# INLINE index #-}
 
     byIndex i   = byIndex i . trans
-    {-# INLINE byIndex #-} 
+    {-# INLINE byIndex #-}
 
     insert x y (Hashed h t) = Hashed
         (h - h' + combine x y)
@@ -54,7 +54,7 @@ instance Trans t => Trans (Hashed t) where
             Nothing -> 0
     {-# INLINE insert #-}
 
-    fromList xs = Hashed 
+    fromList xs = Hashed
         (sum $ map (uncurry combine) xs)
         (fromList xs)
     {-# INLINE fromList #-}

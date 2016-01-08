@@ -19,7 +19,7 @@ module Data.DAWG.Gen.Graph
 
 
 -- import Control.Applicative ((<$>), (<*>))
-import Data.Binary (Binary, put, get)
+-- import Data.Binary (Binary, put, get)
 import qualified Data.IntSet as S
 import qualified Data.IntMap as M
 
@@ -29,7 +29,7 @@ import qualified Data.DAWG.Gen.HashMap as H
 
 
 -- | A set of nodes.  To every node a unique identifier is assigned.
--- Invariants: 
+-- Invariants:
 --
 --   * freeIDs \\intersection occupiedIDs = \\emptySet,
 --
@@ -46,7 +46,7 @@ data Graph n = Graph {
       idMap     :: !(H.HashMap n ID)
     -- | Set of free IDs.
     , freeIDs   :: !S.IntSet
-    -- | Map from IDs to nodes. 
+    -- | Map from IDs to nodes.
     , nodeMap   :: !(M.IntMap n)
     -- | Number of ingoing paths (different paths from the root
     -- to the given node) for each node ID in the graph.
@@ -56,13 +56,13 @@ data Graph n = Graph {
     , ingoMap   :: !(M.IntMap Int) }
     deriving (Show, Eq, Ord)
 
-instance (Ord n, Binary n) => Binary (Graph n) where
-    put Graph{..} = do
-        put idMap
-        put freeIDs
-        put nodeMap
-        put ingoMap
-    get = Graph <$> get <*> get <*> get <*> get
+-- instance (Ord n, Binary n) => Binary (Graph n) where
+--     put Graph{..} = do
+--         put idMap
+--         put freeIDs
+--         put nodeMap
+--         put ingoMap
+--     get = Graph <$> get <*> get <*> get <*> get
 
 -- | Empty graph.
 empty :: Graph n
@@ -134,7 +134,7 @@ insert n g = case H.lookup n (idMap g) of
 
 -- | Delete node from the graph.  If the node was present in the graph
 -- at multiple positions, just decrease the number of ingoing paths.
--- Function crashes if the node is not a member of the graph. 
+-- Function crashes if the node is not a member of the graph.
 -- NOTE: The function does not delete descendant nodes which may become
 -- inaccesible nor does it change the number of ingoing paths for any
 -- descendant of the node.
@@ -164,45 +164,45 @@ delete n g = if num == 0
 --             ingo = m IM.! i
 --         in  foldl' (push ingo) m (edges n)
 --     push x m j = IM.adjust (+x) j m
--- 
+--
 -- postorder :: T.Tree a -> [a] -> [a]
 -- postorder (T.Node a ts) = postorderF ts . (a :)
--- 
+--
 -- postorderF :: T.Forest a -> [a] -> [a]
 -- postorderF ts = foldr (.) id $ map postorder ts
--- 
+--
 -- postOrd :: Graph a -> ID -> [ID]
 -- postOrd g i = postorder (dfs g i) []
--- 
+--
 -- -- | Topological sort given a root ID.
 -- topSort :: Graph a -> ID -> [ID]
 -- topSort g = reverse . postOrd g
--- 
+--
 -- -- | Depth first search starting with given ID.
 -- dfs :: Graph a -> ID -> T.Tree ID
 -- dfs g = prune . generate g
--- 
+--
 -- generate :: Graph a -> ID -> T.Tree ID
 -- generate g i = T.Node i
 --     ( T.Node (eps n) []
 --     : map (generate g) (edges n) )
 --   where
 --     n = nodeBy i g
--- 
+--
 -- type SetM a = S.State IS.IntSet a
--- 
+--
 -- run :: SetM a -> a
 -- run act = S.evalState act IS.empty
--- 
+--
 -- contains :: ID -> SetM Bool
 -- contains i = IS.member i <$> S.get
--- 
+--
 -- include :: ID -> SetM ()
 -- include i = S.modify (IS.insert i)
--- 
+--
 -- prune :: T.Tree ID -> T.Tree ID
 -- prune t = head $ run (chop [t])
--- 
+--
 -- chop :: T.Forest ID -> SetM (T.Forest ID)
 -- chop [] = return []
 -- chop (T.Node v ts : us) = do

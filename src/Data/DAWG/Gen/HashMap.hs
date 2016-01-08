@@ -17,7 +17,7 @@ module Data.DAWG.Gen.HashMap
 
 import Prelude hiding (lookup)
 -- import Control.Applicative ((<$>), (<*>))
-import Data.Binary (Binary, Get, put, get)
+-- import Data.Binary (Binary, Get, put, get)
 import qualified Data.Map as M
 import qualified Data.IntMap as I
 
@@ -59,14 +59,14 @@ data Value a b
 
 
 -- | Value Binary instance.
-instance (Ord a, Binary a, Binary b) => Binary (Value a b) where
-    put (Single x y)    = put (1 :: Int) >> put x >> put y
-    put (Multi m)       = put (2 :: Int) >> put m
-    get = do
-        x <- get :: Get Int
-        case x of
-            1   -> Single <$> get <*> get
-            _   -> Multi <$> get
+-- instance (Ord a, Binary a, Binary b) => Binary (Value a b) where
+--     put (Single x y)    = put (1 :: Int) >> put x >> put y
+--     put (Multi m)       = put (2 :: Int) >> put m
+--     get = do
+--         x <- get :: Get Int
+--         case x of
+--             1   -> Single <$> get <*> get
+--             _   -> Multi <$> get
 
 
 -- | Find element associated to a value key.
@@ -119,9 +119,9 @@ data HashMap a b = HashMap
     , hashMap   :: !(I.IntMap (Value a b)) }
     deriving (Show, Eq, Ord)
 
-instance (Ord a, Binary a, Binary b) => Binary (HashMap a b) where
-    put HashMap{..} = put size >> put hashMap
-    get = HashMap <$> get <*> get
+-- instance (Ord a, Binary a, Binary b) => Binary (HashMap a b) where
+--     put HashMap{..} = put size >> put hashMap
+--     get = HashMap <$> get <*> get
 
 
 -- | Empty map.

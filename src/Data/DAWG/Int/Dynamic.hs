@@ -35,7 +35,7 @@ module Data.DAWG.Int.Dynamic
 ) where
 
 
-import Control.Applicative ((<$>), (<*>))
+-- import Control.Applicative ((<$>), (<*>))
 import Control.Arrow (first)
 import Data.List (foldl')
 import qualified Control.Monad.State.Strict as S

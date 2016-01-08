@@ -10,7 +10,7 @@ module Data.DAWG.Gen.Trans.Map
 
 
 import Prelude hiding (lookup)
-import Data.Binary (Binary)
+-- import Data.Binary (Binary)
 import qualified Data.Map as M
 
 import Data.DAWG.Gen.Types
@@ -20,7 +20,7 @@ import qualified Data.DAWG.Gen.Trans as C
 -- | A vector of distinct key/value pairs strictly ascending with respect
 -- to key values.
 newtype Trans = Trans { unTrans :: M.Map Sym ID }
-    deriving (Show, Eq, Ord, Binary)
+    deriving (Show, Eq, Ord) -- , Binary)
 
 
 instance C.Trans Trans where

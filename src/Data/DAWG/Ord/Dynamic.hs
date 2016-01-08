@@ -1,8 +1,8 @@
 {-# LANGUAGE RecordWildCards #-}
 
 
--- | The simplified version of `Data.DAWG.Ord.Dynamic` adapted to
--- keys and values with `Ord` instances.
+-- | A version of `Data.DAWG.Int.Dynamic` adapted to words with `Ord`
+-- instances.
 
 
 module Data.DAWG.Ord.Dynamic

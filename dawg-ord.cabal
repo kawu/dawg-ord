@@ -1,5 +1,5 @@
 name:               dawg-ord
-version:            0.2
+version:            0.3
 synopsis:           Directed acyclic word graphs
 description:
     The library implements /directed acyclic word graphs/ (DAWGs)
@@ -26,22 +26,20 @@ library
     build-depends:
         base            >= 4 && < 5
       , containers      >= 0.4.1 && < 0.6
-      , binary
       , vector
-      -- , vector-binary
       , mtl
       , transformers
 
     exposed-modules:
+        Data.DAWG.Ord
+      , Data.DAWG.Int
+
+    other-modules:
         Data.DAWG.Gen.Types
       , Data.DAWG.Int.Dynamic
       , Data.DAWG.Ord.Dynamic
---       , Data.DAWG.Ord.Static
-
-    other-modules:
-        Data.DAWG.Int.Dynamic.Internal
+      , Data.DAWG.Int.Dynamic.Internal
       , Data.DAWG.Int.Dynamic.Node
-      -- , Data.DAWG.Int.Static.Node
       , Data.DAWG.Gen.Graph
       , Data.DAWG.Gen.Trans
       , Data.DAWG.Gen.Trans.Vector
@@ -50,7 +48,7 @@ library
       , Data.DAWG.Gen.HashMap
       , Data.DAWG.Gen.Util
 
-    ghc-options: -Wall -O2
+    ghc-options: -Wall
 
 source-repository head
     type: git
