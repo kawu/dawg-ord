@@ -13,8 +13,8 @@ module Data.DAWG.Int.Dynamic.Node
 ) where
 
 
-import Control.Applicative ((<$>), (<*>))
-import Data.Binary (Binary, put, get)
+-- import Control.Applicative ((<$>), (<*>))
+-- import Data.Binary (Binary, put, get)
 
 import Data.DAWG.Gen.Types
 import Data.DAWG.Gen.Util (combine)
@@ -29,18 +29,18 @@ import qualified Data.DAWG.Gen.Trans.Hashed as H
 -- iff they are equal with respect to their values and outgoing
 -- edges.
 data Node = Node {
-    -- | Value stored in the node.
-      value    :: !(Maybe Val)
+    -- | Accepting state or no?
+      accept    :: !Bool
     -- | Transition map (outgoing edges).
     , transMap :: !(H.Hashed Trans)
     } deriving (Show, Eq, Ord)
 
 instance Hash Node where
-    hash Node{..} = combine (hash value) (H.hash transMap)
+    hash Node{..} = combine (hash accept) (H.hash transMap)
 
-instance Binary Node where
-    put Node{..} = put value >> put transMap
-    get = Node <$> get <*> get
+-- instance Binary Node where
+--     put Node{..} = put accept >> put transMap
+--     get = Node <$> get <*> get
 
 
 -- | Transition function.
@@ -63,5 +63,5 @@ children = map snd . edges
 
 -- | Substitue edge determined by a given symbol.
 insert :: Sym -> ID -> Node -> Node
-insert x i (Node w t) = Node w (T.insert x i t)
+insert x i (Node a t) = Node a (T.insert x i t)
 {-# INLINE insert #-}

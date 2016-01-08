@@ -34,10 +34,10 @@ instance C.Trans Trans where
     {-# INLINE index #-}
 
     byIndex i (Trans m) =
-	let n = M.size m
-        in  if i >= 0 && i < n
-                then Just (M.elemAt i m)
-                else Nothing
+        let n = M.size m
+            in  if i >= 0 && i < n
+                    then Just (M.elemAt i m)
+                    else Nothing
     {-# INLINE byIndex #-}
 
     insert x y (Trans m) = Trans (M.insert x y m)

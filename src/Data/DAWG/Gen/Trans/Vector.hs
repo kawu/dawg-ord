@@ -13,9 +13,9 @@ module Data.DAWG.Gen.Trans.Vector
 
 
 import Prelude hiding (lookup)
-import Control.Applicative ((<$>))
-import Data.Binary (Binary)
-import Data.Vector.Binary ()
+-- import Control.Applicative ((<$>))
+-- import Data.Binary (Binary)
+-- import Data.Vector.Binary ()
 import qualified Data.IntMap as M
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Unboxed.Mutable as UM
@@ -28,7 +28,7 @@ import qualified Data.DAWG.Gen.Trans as C
 -- | A vector of distinct key/value pairs strictly ascending with respect
 -- to key values.
 newtype Trans = Trans { unTrans :: U.Vector (Sym, ID) }
-    deriving (Show, Eq, Ord, Binary)
+    deriving (Show, Eq, Ord) -- , Binary)
 
 
 instance C.Trans Trans where

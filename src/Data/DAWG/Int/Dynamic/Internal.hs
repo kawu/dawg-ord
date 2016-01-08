@@ -8,8 +8,8 @@ module Data.DAWG.Int.Dynamic.Internal
 ) where
 
 
-import Control.Applicative ((<$>), (<*>))
-import Data.Binary (Binary, put, get)
+-- import Control.Applicative ((<$>), (<*>))
+-- import Data.Binary (Binary, put, get)
 
 import           Data.DAWG.Gen.Types
 import           Data.DAWG.Gen.Graph (Graph)
@@ -23,8 +23,8 @@ data DAWG a = DAWG
     , root  :: !ID }
     deriving (Show, Eq, Ord)
 
-instance Binary (DAWG a) where
-    put d = do
-        put (graph d)
-        put (root d)
-    get = DAWG <$> get <*> get
+-- instance Binary (DAWG a) where
+--     put d = do
+--         put (graph d)
+--         put (root d)
+--     get = DAWG <$> get <*> get

@@ -12,34 +12,31 @@ module Data.DAWG.Ord.Dynamic
 , root
 
 -- * Query
-, lookup
+, member
 , numStates
 , numEdges
 
 -- * Traversal
-, value
+, accept
 , edges
 , follow
 
 -- * Construction
 , empty
 , fromList
-, fromLang
 -- ** Insertion
 , insert
 
 -- * Conversion
-, assocs
 , keys
-, elems
 ) where
 
 
-import           Prelude hiding (lookup)
 import           Data.List (foldl')
 import           Control.Arrow (first)
 import qualified Control.Monad.State.Strict as S
 
+import           Data.Maybe (fromMaybe)
 import qualified Data.Map.Strict as M
 
 import           Data.DAWG.Gen.Types
@@ -52,18 +49,16 @@ import qualified Data.DAWG.Int.Dynamic as D
 
 
 -- | A directed acyclic word graph with type @a@ representing the
--- type of alphabet elements and type @b@ -- the type of values.
-data DAWG a b = DAWG
+-- type of alphabet elements.
+data DAWG a = DAWG
     { intDAWG   :: D.DAWG Sym
     , symMap    :: M.Map a Int
     , symMapR   :: M.Map Int a
-    , valMap    :: M.Map b Int
-    , valMapR   :: M.Map Int b
     } deriving (Show, Eq, Ord)
 
 
 -- | Root of the DAWG.
-root :: DAWG a b -> ID
+root :: DAWG a -> ID
 root = D.root . intDAWG
 
 
@@ -73,39 +68,29 @@ root = D.root . intDAWG
 
 
 -- | DAWG monad.
-type DM a b = S.State (DAWG a b)
+type DM a = S.State (DAWG a)
 
 
 -- | Register new key in the underlying automaton.
 -- TODO: We could optimize it.
-addSym :: Ord a => a -> DM a b Int
+addSym :: Ord a => a -> DM a Int
 addSym x = S.state $ \dawg@DAWG{..} ->
-    let y = case M.lookup x symMap of
-            Nothing -> M.size symMap
-            Just k  -> k
+    let y = fromMaybe (M.size symMap) (M.lookup x symMap)
+--     let y = case M.lookup x symMap of
+--             Nothing -> M.size symMap
+--             Just k  -> k
     in  (y, dawg
             { symMap  = M.insert x y symMap
             , symMapR = M.insert y x symMapR })
 
 
 -- | Register new key in the underlying automaton.
-addKey :: Ord a => [a] -> DM a b [Int]
+addKey :: Ord a => [a] -> DM a [Int]
 addKey = mapM addSym
 
 
--- | Register new value in the underlying automaton.
--- TODO: We could optimize it.
-addVal :: Ord b => b -> DM a b Int
-addVal x = S.state $ \dawg@DAWG{..} ->
-    let y = case M.lookup x valMap of
-            Nothing -> M.size valMap
-            Just k  -> k
-    in  (y, dawg
-            { valMap  = M.insert x y valMap
-            , valMapR = M.insert y x valMapR })
-
 -- | Run the DAGW monad.
-runDM :: DM a b c -> DAWG a b -> (c, DAWG a b)
+runDM :: DM a c -> DAWG a -> (c, DAWG a)
 runDM = S.runState
 
 
@@ -115,27 +100,26 @@ runDM = S.runState
 
 
 -- | Empty DAWG.
-empty :: DAWG a b
-empty = DAWG D.empty M.empty M.empty M.empty M.empty
+empty :: DAWG a
+empty = DAWG D.empty M.empty M.empty
 
 
 -- | Number of states in the automaton.
-numStates :: DAWG a b -> Int
+numStates :: DAWG a -> Int
 numStates = D.numStates . intDAWG
 
 
 -- | Number of edges in the automaton.
-numEdges :: DAWG a b -> Int
+numEdges :: DAWG a -> Int
 numEdges = D.numEdges . intDAWG
 
 
 -- | Insert the (key, value) pair into the DAWG.
-insert :: (Ord a, Ord b) => [a] -> b -> DAWG a b -> DAWG a b
-insert xs0 y0 dag0 = snd $ flip runDM dag0 $ do
+insert :: (Ord a) => [a] -> DAWG a -> DAWG a
+insert xs0 dag0 = snd $ flip runDM dag0 $ do
     xs <- addKey xs0
-    y  <- addVal y0
     S.modify $ \dag -> dag
-        {intDAWG = D.insert xs y (intDAWG dag)}
+        {intDAWG = D.insert xs (intDAWG dag)}
 
 
 -- -- | Insert with a function, combining new value and old value.
@@ -160,45 +144,27 @@ insert xs0 y0 dag0 = snd $ flip runDM dag0 $ do
 
 
 -- | Find value associated with the key.
-lookup :: (Ord a, Ord b) => [a] -> DAWG a b -> Maybe b
-lookup xs0 DAWG{..} = do
-    xs <- mapM (flip M.lookup symMap) xs0
-    y  <- D.lookup xs intDAWG
-    M.lookup y valMapR
+member :: (Ord a) => [a] -> DAWG a -> Bool
+member xs0 DAWG{..} = justTrue $ do
+    xs <- mapM (`M.lookup` symMap) xs0
+    return $ D.member xs intDAWG
 
 
 -- | Return all key/value pairs in the DAWG in ascending key order.
-assocs :: DAWG a b -> [([a], b)]
-assocs DAWG{..} = 
-    [ (decodeKey xs, decodeVal y)
-    | (xs, y) <- D.assocs intDAWG ]
+keys :: DAWG a -> [[a]]
+keys DAWG{..} =
+    [ decodeKey xs
+    | xs <- D.keys intDAWG ]
   where
     decodeKey = map decodeSym
     decodeSym x = symMapR M.! x
-    decodeVal x = valMapR M.! x
-
-
--- | Return all keys of the DAWG in ascending order.
-keys :: DAWG a b -> [[a]]
-keys = map fst . assocs
-
-
--- | Return all elements of the DAWG in the ascending order of their keys.
-elems :: DAWG a b -> [b]
-elems = map snd . assocs
 
 
 -- | Construct DAWG from the list of (word, value) pairs.
-fromList :: (Ord a, Ord b) => [([a], b)] -> DAWG a b
+fromList :: (Ord a) => [[a]] -> DAWG a
 fromList xs =
-    let update t (x, v) = insert x v t
+    let update t x = insert x t
     in  foldl' update empty xs
-
-
--- | Make DAWG from the list of words.  Annotate each word with
--- the @()@ value.
-fromLang :: Ord a => [[a]] -> DAWG a ()
-fromLang xs = fromList [(x, ()) | x <- xs]
 
 
 ------------------------------------------------------------
@@ -207,21 +173,30 @@ fromLang xs = fromList [(x, ()) | x <- xs]
 
 
 -- | Value stored in the given node.
-value :: ID -> DAWG a b -> Maybe b
-value i DAWG{..}  = do
-    x <- D.value i intDAWG
-    M.lookup x valMapR
+accept :: ID -> DAWG a -> Bool
+accept i DAWG{..} = D.accept i intDAWG
 
 
 -- | A list of outgoing edges.
-edges :: ID -> DAWG a b -> [(a, ID)]
+edges :: ID -> DAWG a -> [(a, ID)]
 edges i DAWG{..} = map
     (first (symMapR M.!))
     (D.edges i intDAWG)
 
 
 -- | Follow the given transition from the given state.
-follow :: Ord a => ID -> a -> DAWG a b -> Maybe ID
+follow :: Ord a => ID -> a -> DAWG a -> Maybe ID
 follow i x DAWG{..} = do
     y <- M.lookup x symMap
     D.follow i y intDAWG
+
+
+------------------------------------------------------------
+-- Misc
+------------------------------------------------------------
+
+
+-- | Is it `Just True`?
+justTrue :: Maybe Bool -> Bool
+justTrue (Just True) = True
+justTrue _           = False

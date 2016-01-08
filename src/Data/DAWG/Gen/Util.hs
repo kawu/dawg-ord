@@ -9,7 +9,7 @@ module Data.DAWG.Gen.Util
 , combine
 ) where
 
-import Control.Applicative ((<$>))
+-- import Control.Applicative ((<$>))
 import Data.Bits (shiftR, xor)
 import Data.Vector.Unboxed (Unbox)
 import qualified Control.Monad.ST as ST
@@ -47,7 +47,7 @@ binarySearch cmp v = ST.runST $ do
 findLastLE :: Unbox a => (a -> Ordering) -> U.Vector a -> Maybe (Int, a)
 findLastLE cmp v =
     let k' = binarySearch cmp v
-    	k  = either id (\x -> x-1) k'
+        k  = either id (\x -> x-1) k'
     in  (k,) <$> v U.!? k
 {-# INLINE findLastLE #-}
 

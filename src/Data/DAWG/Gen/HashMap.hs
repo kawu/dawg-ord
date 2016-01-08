@@ -16,7 +16,7 @@ module Data.DAWG.Gen.HashMap
 
 
 import Prelude hiding (lookup)
-import Control.Applicative ((<$>), (<*>))
+-- import Control.Applicative ((<$>), (<*>))
 import Data.Binary (Binary, Get, put, get)
 import qualified Data.Map as M
 import qualified Data.IntMap as I
@@ -33,6 +33,9 @@ class Ord a => Hash a where
 
 instance Hash Int where
     hash = id
+
+instance Hash Bool where
+    hash b = hash $ if b then 1 :: Int else 0
 
 instance Hash a => Hash (Maybe a) where
     hash (Just x)
@@ -77,7 +80,7 @@ find x (Multi m) = M.lookup x m
 -- | Unsafe `find` version.
 -- Assumption: element is a member of the 'Value'.
 findUnsafe :: Ord a => a -> Value a b -> Maybe b
-findUnsafe _ (Single _ y) = Just y	-- unsafe
+findUnsafe _ (Single _ y) = Just y  -- unsafe
 findUnsafe x (Multi m) = M.lookup x m
 
 
@@ -85,7 +88,7 @@ findUnsafe x (Multi m) = M.lookup x m
 -- form if possible).
 trySingle :: Ord a => M.Map a b -> Value a b
 trySingle m = if M.size m == 1
-    then (uncurry Single) (M.findMin m)
+    then uncurry Single (M.findMin m)
     else Multi m
 
 

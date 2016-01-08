@@ -18,7 +18,7 @@ module Data.DAWG.Gen.Graph
 ) where
 
 
-import Control.Applicative ((<$>), (<*>))
+-- import Control.Applicative ((<$>), (<*>))
 import Data.Binary (Binary, put, get)
 import qualified Data.IntSet as S
 import qualified Data.IntMap as M
@@ -83,8 +83,8 @@ nodeBy i g = nodeMap g M.! i
 -- | Retrieve identifier of a node assuming that the node
 -- is present in the graph.  If the assumption is not
 -- safisfied, the returned identifier may be incorrect.
-nodeID'Unsafe :: Hash n => n -> Graph n -> ID
-nodeID'Unsafe n g = H.lookupUnsafe n (idMap g)
+nodeIDUnsafe :: Hash n => n -> Graph n -> ID
+nodeIDUnsafe n g = H.lookupUnsafe n (idMap g)
 
 -- | Add new graph node (assuming that it is not already a member
 -- of the graph).
@@ -143,7 +143,7 @@ delete n g = if num == 0
     then remNode i g'
     else g'
   where
-    i = nodeID'Unsafe n g
+    i = nodeIDUnsafe n g
     (num, g') = decIngo i g
 
 -- -- | Construct a graph from a list of node/ID pairs and a root ID.
