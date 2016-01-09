@@ -29,17 +29,17 @@ import qualified Data.DAWG.Gen.Trans.Hashed as H
 -- iff they are equal with respect to their values and outgoing
 -- edges.
 data Node = Node {
-    -- | Accepting state or no?
-      accept    :: !Bool
+    -- | Value stored in the node.
+      value    :: !(Maybe Val)
     -- | Transition map (outgoing edges).
     , transMap :: !(H.Hashed Trans)
     } deriving (Show, Eq, Ord)
 
 instance Hash Node where
-    hash Node{..} = combine (hash accept) (H.hash transMap)
+    hash Node{..} = combine (hash value) (H.hash transMap)
 
 -- instance Binary Node where
---     put Node{..} = put accept >> put transMap
+--     put Node{..} = put value >> put transMap
 --     get = Node <$> get <*> get
 
 
@@ -63,5 +63,5 @@ children = map snd . edges
 
 -- | Substitue edge determined by a given symbol.
 insert :: Sym -> ID -> Node -> Node
-insert x i (Node a t) = Node a (T.insert x i t)
+insert x i (Node w t) = Node w (T.insert x i t)
 {-# INLINE insert #-}

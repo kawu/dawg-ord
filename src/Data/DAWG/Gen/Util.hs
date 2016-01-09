@@ -9,19 +9,19 @@ module Data.DAWG.Gen.Util
 , combine
 ) where
 
--- import Control.Applicative ((<$>))
+import Control.Applicative ((<$>))
 import Data.Bits (shiftR, xor)
 import Data.Vector.Unboxed (Unbox)
 import qualified Control.Monad.ST as ST
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Unboxed.Mutable as UM
 
--- | Given a vector of length @n@ strictly ascending with respect to a given
--- comparison function, find an index at which the given element could be
--- inserted while preserving sortedness.
--- The 'Left' result indicates, that the 'EQ' element has been found,
--- while the 'Right' result means otherwise.  Value of the 'Right'
--- result is in the [0,n] range.
+-- | Given a vector of length @n@ strictly ascending with respect to
+-- a given comparison function, find an index at which the given
+-- element could be inserted while preserving sortedness.  The 'Left'
+-- result indicates, that the 'EQ' element has been found, while the
+-- 'Right' result means otherwise.  Value of the 'Right' result is in
+-- the [0,n] range.
 binarySearch :: Unbox a => (a -> Ordering) -> U.Vector a -> Either Int Int
 binarySearch cmp v = ST.runST $ do
     w <- U.unsafeThaw v

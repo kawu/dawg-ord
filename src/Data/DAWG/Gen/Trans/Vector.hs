@@ -13,7 +13,7 @@ module Data.DAWG.Gen.Trans.Vector
 
 
 import Prelude hiding (lookup)
--- import Control.Applicative ((<$>))
+import Control.Applicative ((<$>))
 -- import Data.Binary (Binary)
 -- import Data.Vector.Binary ()
 import qualified Data.IntMap as M

@@ -1,5 +1,5 @@
--- | A version of `Data.DAWG.Int` adapted to words with `Ord`
--- instances.
+-- | A version of `Data.DAWG.Int` adapted to keys and values with
+-- `Ord` instances.
 
 
 module Data.DAWG.Ord
@@ -10,25 +10,30 @@ module Data.DAWG.Ord
 , root
 
 -- * Query
-, member
+, lookup
 , numStates
 , numEdges
 
 -- * Traversal
-, accept
+, value
 , edges
 , follow
 
 -- * Construction
 , empty
 , fromList
+, fromLang
 -- ** Insertion
 , insert
 
 -- * Conversion
+, assocs
 , keys
+, elems
 ) where
 
+
+import           Prelude hiding (lookup)
 
 import           Data.DAWG.Gen.Types
 import           Data.DAWG.Ord.Dynamic

@@ -13,32 +13,40 @@ module Data.DAWG.Int.Dynamic
   DAWG (root)
 
 -- * Query
-, member
+, lookup
 , numStates
 , numEdges
 
 -- * Traversal
-, accept
+, value
 , edges
 , follow
 
 -- * Construction
 , empty
 , fromList
+, fromListWith
+, fromLang
 -- ** Insertion
 , insert
+, insertWith
+-- ** Deletion
+, delete
 
 -- * Conversion
+, assocs
 , keys
+, elems
 ) where
 
 
--- import Control.Applicative ((<$>), (<*>))
+import Prelude hiding (lookup)
+import Control.Applicative ((<$>), (<*>))
 import Control.Arrow (first)
 import Data.List (foldl')
 import qualified Control.Monad.State.Strict as S
--- import           Control.Monad.Trans.Maybe
--- import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.Maybe
+import           Control.Monad.Trans.Class
 
 import           Data.DAWG.Gen.Types
 import           Data.DAWG.Gen.Graph (Graph)
@@ -73,7 +81,7 @@ insertNode = S.state . G.insert
 
 -- | Leaf node with no children and 'Nothing' value.
 insertLeaf :: GraphM ID
-insertLeaf = insertNode $ N.Node False T.empty
+insertLeaf = insertNode $ N.Node Nothing T.empty
     -- i <- insertNode (N.Leaf Nothing)
     -- insertNode (N.Branch i T.empty)
 
@@ -84,71 +92,69 @@ deleteNode = S.state . mkState . G.delete
 
 
 -- | Invariant: the identifier points to the 'Branch' node.
--- TODO: which identifier?
-insertM :: [Sym] -> ID -> GraphM ID
-insertM (x:xs) i = do
+insertM :: [Sym] -> Val -> ID -> GraphM ID
+insertM (x:xs) y i = do
     n <- nodeBy i
     j <- case N.onSym x n of
         Just j  -> return j
         Nothing -> insertLeaf
-    k <- insertM xs j
+    k <- insertM xs y j
     deleteNode n
     insertNode (N.insert x k n)
-insertM [] i = do
+insertM [] y i = do
     n <- nodeBy i
     deleteNode n
-    insertNode (n { N.accept = True })
+    insertNode (n { N.value = Just y })
 
 
--- deleteM :: [Sym] -> ID -> GraphM ID
--- deleteM (x:xs) i = do
---     n <- nodeBy i
---     case N.onSym x n of
---         Nothing -> return i
---         Just j  -> do
---             k <- deleteM xs j
---             deleteNode n
---             insertNode (N.insert x k n)
--- deleteM [] i = do
---     n <- nodeBy i
---     deleteNode n
---     insertNode (n { N.value = Nothing })
+insertWithM
+    :: (Val -> Val -> Val)
+    -> [Sym] -> Val -> ID -> GraphM ID
+insertWithM f (x:xs) y i = do
+    n <- nodeBy i
+    j <- case N.onSym x n of
+        Just j  -> return j
+        Nothing -> insertLeaf
+    k <- insertWithM f xs y j
+    deleteNode n
+    insertNode (N.insert x k n)
+insertWithM f [] y i = do
+    n <- nodeBy i
+    deleteNode n
+    let y'new = case N.value n of
+            Just y' -> f y y'
+            Nothing -> y
+    insertNode (n { N.value = Just y'new })
 
 
--- -- | Follow the path from the given identifier.
--- followPath :: [Sym] -> ID -> MaybeT GraphM ID
--- followPath (x:xs) i = do
---     n <- lift $ nodeBy i
---     j <- liftMaybe $ N.onSym x n
---     followPath xs j
--- followPath [] i = return i
+deleteM :: [Sym] -> ID -> GraphM ID
+deleteM (x:xs) i = do
+    n <- nodeBy i
+    case N.onSym x n of
+        Nothing -> return i
+        Just j  -> do
+            k <- deleteM xs j
+            deleteNode n
+            insertNode (N.insert x k n)
+deleteM [] i = do
+    n <- nodeBy i
+    deleteNode n
+    insertNode (n { N.value = Nothing })
 
 
 -- | Follow the path from the given identifier.
-followPath' :: [Sym] -> ID -> GraphM (Maybe ID)
-followPath' (x:xs) i = do
-    n <- nodeBy i
-    case N.onSym x n of
-         Nothing -> return Nothing
-         Just j  -> followPath' xs j
-followPath' [] i = return $ Just i
+followPath :: [Sym] -> ID -> MaybeT GraphM ID
+followPath (x:xs) i = do
+    n <- lift $ nodeBy i
+    j <- liftMaybe $ N.onSym x n
+    followPath xs j
+followPath [] i = return i
+    
 
-
-memberM :: [Sym] -> ID -> GraphM Bool
-memberM xs i = do
-    mj <- followPath' xs i
-    case mj of
-         Nothing    -> return False
-         Just j     -> N.accept <$> nodeBy j
-
-
--- memberM :: [Sym] -> ID -> GraphM Bool
--- memberM xs i = fmap justTrue . runMaybeT $ do
---     j <- followPath xs i
---     lift $ N.accept <$> nodeBy j
---   where
---     justTrue (Just True) = True
---     justTrue _           = False
+lookupM :: [Sym] -> ID -> GraphM (Maybe Val)
+lookupM xs i = runMaybeT $ do
+    j <- followPath xs i
+    MaybeT $ N.value <$> nodeBy j
 
 
 ------------------------------------------------------------
@@ -158,16 +164,15 @@ memberM xs i = do
 
 -- | Return all (key, value) pairs in ascending key order in the
 -- sub-DAWG determined by the given node ID.
-subPairs :: Graph N.Node -> ID -> [[Sym]]
+subPairs :: Graph N.Node -> ID -> [([Sym], Val)]
 subPairs g i =
     here n ++ concatMap there (N.edges n)
   where
     n = G.nodeBy i g
-    here v = [[] | N.accept v]
---     here v = if N.accept v
---         then [[]]
---         else []
-    there (sym, j) = map (sym:) (subPairs g j)
+    here v = case N.value v of
+        Just x  -> [([], x)]
+        Nothing -> []
+    there (sym, j) = map (first (sym:)) (subPairs g j)
 
 
 -- | Empty DAWG.
@@ -187,30 +192,46 @@ numEdges :: DAWG a -> Int
 numEdges = sum . map (length . N.edges) . G.nodes . graph
 
 
--- | Insert the word into the DAWG.
-insert :: Enum a => [a] -> DAWG a -> DAWG a
-insert xs' d =
+-- | Insert the (key, value) pair into the DAWG.
+insert :: Enum a => [a] -> Val -> DAWG a -> DAWG a
+insert xs' y d =
     let xs = map fromEnum xs'
-        (i, g) = S.runState (insertM xs $ root d) (graph d)
+        (i, g) = S.runState (insertM xs y $ root d) (graph d)
     in  DAWG g i
 {-# INLINE insert #-}
 
 
--- -- | Delete the key from the DAWG.
--- delete :: Enum a => [a] -> DAWG a -> DAWG a
--- delete xs' d =
---     let xs = map fromEnum xs'
---         (i, g) = S.runState (deleteM xs $ root d) (graph d)
---     in  DAWG g i
--- {-# SPECIALIZE delete :: String -> DAWG Char -> DAWG Char #-}
-
-
--- | Is the word a member of the DAWG?
-member :: Enum a => [a] -> DAWG a -> Bool
-member xs' d =
+-- | Insert with a function, combining new value and old value.
+-- 'insertWith' f key value d will insert the pair (key, value) into d if
+-- key does not exist in the DAWG. If the key does exist, the function
+-- will insert the pair (key, f new_value old_value).
+insertWith
+    :: Enum a => (Val -> Val -> Val)
+    -> [a] -> Val -> DAWG a -> DAWG a
+insertWith f xs' y d =
     let xs = map fromEnum xs'
-    in  S.evalState (memberM xs $ root d) (graph d)
-{-# SPECIALIZE member :: String -> DAWG Char -> Bool #-}
+        (i, g) = S.runState (insertWithM f xs y $ root d) (graph d)
+    in  DAWG g i
+{-# SPECIALIZE insertWith
+        :: (Val -> Val -> Val) -> String -> Val
+        -> DAWG Char -> DAWG Char #-}
+
+
+-- | Delete the key from the DAWG.
+delete :: Enum a => [a] -> DAWG a -> DAWG a
+delete xs' d =
+    let xs = map fromEnum xs'
+        (i, g) = S.runState (deleteM xs $ root d) (graph d)
+    in  DAWG g i
+{-# SPECIALIZE delete :: String -> DAWG Char -> DAWG Char #-}
+
+
+-- | Find value associated with the key.
+lookup :: Enum a => [a] -> DAWG a -> Maybe Val
+lookup xs' d =
+    let xs = map fromEnum xs'
+    in  S.evalState (lookupM xs $ root d) (graph d)
+{-# SPECIALIZE lookup :: String -> DAWG Char -> Maybe Val #-}
 
 
 -- -- | Find all (key, value) pairs such that key is prefixed
@@ -226,20 +247,52 @@ member xs' d =
 --     -> [(String, b)] #-}
 
 
--- | Return all keys in the DAWG in ascending key order.
-keys :: Enum a => DAWG a -> [[a]]
-keys
-    = map (map toEnum)
+-- | Return all key/value pairs in the DAWG in ascending key order.
+assocs :: Enum a => DAWG a -> [([a], Val)]
+assocs
+    = map (first (map toEnum))
     . (subPairs <$> graph <*> root)
+{-# SPECIALIZE assocs :: DAWG Char -> [(String, Val)] #-}
+
+
+-- | Return all keys of the DAWG in ascending order.
+keys :: Enum a => DAWG a -> [[a]]
+keys = map fst . assocs
 {-# SPECIALIZE keys :: DAWG Char -> [String] #-}
 
 
--- | Construct DAWG from the list of words.
-fromList :: Enum a => [[a]] -> DAWG a
+-- | Return all elements of the DAWG in the ascending order of their keys.
+elems :: DAWG a -> [Val]
+elems = map snd . (subPairs <$> graph <*> root)
+
+
+-- | Construct DAWG from the list of (word, value) pairs.
+fromList :: Enum a => [([a], Val)] -> DAWG a
 fromList xs =
-    let update t x = insert x t
+    let update t (x, v) = insert x v t
     in  foldl' update empty xs
-{-# SPECIALIZE fromList :: [String] -> DAWG Char #-}
+{-# INLINE fromList #-}
+
+
+-- | Construct DAWG from the list of (word, value) pairs
+-- with a combining function.  The combining function is
+-- applied strictly.
+fromListWith
+    :: Enum a => (Val -> Val -> Val)
+    -> [([a], Val)] -> DAWG a
+fromListWith f xs =
+    let update t (x, v) = insertWith f x v t
+    in  foldl' update empty xs
+{-# SPECIALIZE fromListWith
+        :: (Val -> Val -> Val)
+        -> [(String, Val)] -> DAWG Char #-}
+
+
+-- | Make DAWG from the list of words.  Annotate each word with
+-- the @()@ value.
+fromLang :: Enum a => [[a]] -> DAWG a
+fromLang xs = fromList [(x, 0) | x <- xs]
+{-# SPECIALIZE fromLang :: [String] -> DAWG Char #-}
 
 
 ------------------------------------------------------------
@@ -257,21 +310,15 @@ edges i
 {-# SPECIALIZE edges :: ID -> DAWG Int  -> [(Int, ID)]  #-}
 
 
--- | Does the identifer represent an accepting state?
-accept :: ID -> DAWG a -> Bool
-accept i = N.accept . G.nodeBy i . graph
-
-
--- -- | Follow the given transition from the given state.
--- follow :: Enum a => ID -> a -> DAWG a -> Maybe ID
--- follow i x DAWG{..} = flip S.evalState graph $ runMaybeT $
---     followPath [fromEnum x] i
+-- | Value stored in the given state.
+value :: ID -> DAWG a -> Maybe Val
+value i = N.value . G.nodeBy i . graph
 
 
 -- | Follow the given transition from the given state.
 follow :: Enum a => ID -> a -> DAWG a -> Maybe ID
-follow i x DAWG{..} = flip S.evalState graph $
-    followPath' [fromEnum x] i
+follow i x DAWG{..} = flip S.evalState graph $ runMaybeT $
+    followPath [fromEnum x] i
 
 
 ------------------------------------------------------------
@@ -279,6 +326,6 @@ follow i x DAWG{..} = flip S.evalState graph $
 ------------------------------------------------------------
 
 
--- liftMaybe :: Monad m => Maybe a -> MaybeT m a
--- liftMaybe = MaybeT . return
--- {-# INLINE liftMaybe #-}
+liftMaybe :: Monad m => Maybe a -> MaybeT m a
+liftMaybe = MaybeT . return
+{-# INLINE liftMaybe #-}
