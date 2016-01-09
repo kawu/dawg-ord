@@ -1,8 +1,8 @@
 {-# LANGUAGE RecordWildCards #-}
 
 
--- | A version of `Data.DAWG.Int.Dynamic` adapted to
--- keys and values with `Ord` instances.
+-- | A version of 'Data.DAWG.Int.Dynamic' adapted to
+-- keys and values with 'Ord' instances.
 
 
 module Data.DAWG.Ord.Dynamic
@@ -52,12 +52,12 @@ import qualified Data.DAWG.Int.Dynamic as D
 ------------------------------------------------------------
 
 
--- | A directed acyclic word graph (DAWG) with type `a` representing
--- the type of alphabet symbols (over which keys are constructued)
--- and type `b` -- the type of values.
+-- | A directed acyclic word graph (DAWG) with type @a@ representing
+-- the type of alphabet symbols (over which keys are constructed)
+-- and type @b@ -- the type of values.
 --
--- A DAWG is, semantically, a map from keys (sequences of `a`s) to
--- values `b`.
+-- A DAWG is, semantically, a map from keys (sequences of @a@'s) to
+-- values @b@.
 data DAWG a b = DAWG
     { intDAWG   :: D.DAWG Sym
     , symMap    :: M.Map a Int
@@ -212,21 +212,21 @@ fromLang xs = fromList [(x, ()) | x <- xs]
 ------------------------------------------------------------
 
 
--- | Value stored in the given node.
+-- | Value stored in the given automaton state.
 value :: ID -> DAWG a b -> Maybe b
 value i DAWG{..}  = do
     x <- D.value i intDAWG
     M.lookup x valMapR
 
 
--- | A list of outgoing edges.
+-- | A list of outgoing edges (automaton transitions).
 edges :: ID -> DAWG a b -> [(a, ID)]
 edges i DAWG{..} = map
     (first (symMapR M.!))
     (D.edges i intDAWG)
 
 
--- | Follow the given transition from the given state.
+-- | Follow a transition with the given symbol from the given state.
 follow :: Ord a => ID -> a -> DAWG a b -> Maybe ID
 follow i x DAWG{..} = do
     y <- M.lookup x symMap

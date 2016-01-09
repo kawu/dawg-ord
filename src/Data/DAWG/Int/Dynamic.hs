@@ -300,7 +300,7 @@ fromLang xs = fromList [(x, 0) | x <- xs]
 ------------------------------------------------------------
 
 
--- | A list of outgoing edges.
+-- | A list of outgoing edges (automaton transitions).
 edges :: Enum a => ID -> DAWG a -> [(a, ID)]
 edges i
     = map (first toEnum)
@@ -310,12 +310,12 @@ edges i
 {-# SPECIALIZE edges :: ID -> DAWG Int  -> [(Int, ID)]  #-}
 
 
--- | Value stored in the given state.
+-- | Value stored in the given automaton state.
 value :: ID -> DAWG a -> Maybe Val
 value i = N.value . G.nodeBy i . graph
 
 
--- | Follow the given transition from the given state.
+-- | Follow a transition with the given symbol from the given state.
 follow :: Enum a => ID -> a -> DAWG a -> Maybe ID
 follow i x DAWG{..} = flip S.evalState graph $ runMaybeT $
     followPath [fromEnum x] i

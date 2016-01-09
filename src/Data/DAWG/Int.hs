@@ -3,8 +3,8 @@
 -- The implementation provides a fast insert operation which can be
 -- used to build the DAWG structure incrementaly.
 --
--- Keys and values must provide an `Enum` instance; see the
--- `Data.DAWG.Ord` module if you look for a more generic solution.
+-- Keys and values must provide an 'Enum' instance; see the
+-- 'Data.DAWG.Ord' module if you look for a more generic solution.
 
 
 module Data.DAWG.Int
@@ -12,6 +12,7 @@ module Data.DAWG.Int
 -- * DAWG type
   DAWG
 , ID
+, Val
 , root
 
 -- * Query
