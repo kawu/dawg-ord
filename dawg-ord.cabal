@@ -52,6 +52,36 @@ library
 
     ghc-options: -Wall
 
+
+test-suite test
+    type:
+        exitcode-stdio-1.0
+    hs-source-dirs:
+        tests
+      , src
+    main-is:
+        test.hs
+    other-modules:
+        Data.DAWG.Ord.Tests
+      , Data.DAWG.Ord
+      , Data.DAWG.Int
+      , Data.DAWG.Gen.Types
+      , Data.DAWG.Int.Dynamic
+      , Data.DAWG.Ord.Dynamic
+      , Data.DAWG.Int.Dynamic.Internal
+      , Data.DAWG.Int.Dynamic.Node
+      , Data.DAWG.Gen.Graph
+      , Data.DAWG.Gen.Trans
+      , Data.DAWG.Gen.Trans.Vector
+      , Data.DAWG.Gen.Trans.Map
+      , Data.DAWG.Gen.Trans.Hashed
+      , Data.DAWG.Gen.HashMap
+      , Data.DAWG.Gen.Util
+    build-depends:
+        tasty                   >= 0.10
+      , tasty-hunit             >= 0.9
+      , HUnit                   >= 1.2
+
 source-repository head
     type: git
     location: https://github.com/kawu/dawg-ord.git
