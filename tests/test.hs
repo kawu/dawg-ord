@@ -1,9 +1,9 @@
 import           Test.Tasty (defaultMain, testGroup)
 
-import qualified Data.DAWG.Ord.Tests
+import qualified Ord
 
 
 main :: IO ()
 main = defaultMain $ testGroup "Tests"
-    [ Data.DAWG.Ord.Tests.tests
+    [ Ord.tests
     ]

@@ -2,7 +2,10 @@
 -- {-# LANGUAGE RecordWildCards #-}
 
 
-module Data.DAWG.Ord.Tests where
+-- | Tests for the "Data.DAWG.Ord" module.
+
+
+module Ord where
 
 
 import qualified Data.Set as S
