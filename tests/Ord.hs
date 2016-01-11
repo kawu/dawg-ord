@@ -9,66 +9,52 @@ module Ord where
 
 
 import qualified Data.Set as S
+import qualified Data.Map.Strict as M
 
-import           Test.Tasty (TestTree, testGroup)
-import           Test.HUnit (Assertion, (@?=))
-import           Test.Tasty.HUnit (testCase)
+import           Test.Tasty
+import qualified Test.Tasty.SmallCheck as SC
+import qualified Test.SmallCheck.Series as SC
+import qualified Test.Tasty.QuickCheck as QC
+import           Test.Tasty.HUnit
 
 import qualified Data.DAWG.Ord as D
 
 
----------------------------------------------------------------------
--- All Tests
----------------------------------------------------------------------
-
-
--- | All tests of the corresponding module.
 tests :: TestTree
-tests = testGroup "Data.DAWG.Ord"
-    [ testCase "fullLang" $ fullLang [0..2::Int] 5
-    , testCase "assocsFromListID" $ assocsFromListID dataSet1
-    , testCase "dataSet1DAWGSize" dataSet1DAWGSize ]
+tests = testGroup "Tests" [properties, unitTests]
 
 
----------------------------------------------------------------------
--- Assertions / Properties
----------------------------------------------------------------------
+properties :: TestTree
+properties = testGroup "Properties" [scProps, qcProps]
 
 
--- | Verify that `assocs . fromList` is an identity (up to the order
--- of the elements in the input list).
-assocsFromListID
-    :: (Show a, Ord a, Show b, Ord b)
-    => [([a], b)]
-    -> Assertion
-assocsFromListID xs
-    =   S.fromList (D.assocs (D.fromList xs))
-    @?= S.fromList xs
+scProps = testGroup "(checked by SmallCheck)"
+    [ SC.testProperty "id == assocs . fromList (up to order)" $
+        \xs -> M.fromList (D.assocs (D.fromList xs))
+            == M.fromList (xs :: [(String, Int)])
+    , SC.testProperty
+        "Number of states and transitions in a \"full\" langauge" $
+          SC.changeDepth (+1) $ \n k ->
+            let dawg = D.fromLang (genFull n k)
+            in  D.numStates dawg == SC.getNonNegative k + 1 &&
+                D.numEdges  dawg ==
+                    SC.getPositive n * SC.getNonNegative k
+    ]
 
 
--- | Verify the numbers of states and transitions for a language S^n
--- where S is an non-empty alphabet and n specifies the length of
--- words in the language.  Both S and n are provided as input.
-fullLang :: Ord a => [a] -> Int -> Assertion
-fullLang xList n = do
-    D.numStates dawg @?= n + 1
-    D.numEdges dawg @?= (S.size xSet * n)
-  where
-    xSet = S.fromList xList
-    dawg = D.fromLang (genLang n)
-    genLang 0 = [[]]
-    genLang k = [ x:xs
-                | xs <- genLang (k - 1)
-                , x <- S.toList xSet]
+qcProps = testGroup "(checked by QuickCheck)"
+    [ QC.testProperty "id == assocs . fromList (up to order)" $
+        \xs -> M.fromList (D.assocs (D.fromList xs))
+            == M.fromList (xs :: [(String, Int)])
+    ]
 
 
--- | Verify the size of the DAWG constructed from dataset no. 1.
-dataSet1DAWGSize :: Assertion
-dataSet1DAWGSize = do
-    D.numStates dawg @?= 11
-    D.numEdges dawg @?= 12
-  where
-    dawg = D.fromList dataSet1
+unitTests = testGroup "Unit tests"
+    [ testCase "Size of a DAWG build from sample data" $ do
+        let dawg = D.fromList dataSet1
+        D.numStates dawg @?= 11
+        D.numEdges dawg @?= 12
+    ]
 
 
 ---------------------------------------------------------------------
@@ -76,7 +62,7 @@ dataSet1DAWGSize = do
 ---------------------------------------------------------------------
 
 
--- | Sample dataset no. 1.  See also `dataSet1DAWGSize`.
+-- | Sample dataset no. 1.  See also `unitTests`.
 dataSet1 :: [(String, Int)]
 dataSet1 =
     [ ("asdf", 1)
@@ -85,3 +71,21 @@ dataSet1 =
     , ("df", 1)
     , ("asdfg", 3)
     , ("sdfg", 3) ]
+
+
+---------------------------------------------------------------------
+-- Utils
+---------------------------------------------------------------------
+
+
+-- | Generate a \"full\" language of words of length `k` over
+-- an alphabet of size `n`.
+genFull :: SC.Positive Int -> SC.NonNegative Int -> [[Int]]
+genFull (SC.Positive n) (SC.NonNegative k) =
+    genLang n k
+  where
+    genLang n 0 = [[]]
+    genLang n k =
+        [ x:xs
+        | xs <- genLang n (k - 1)
+        , x <- [1 .. n]]
