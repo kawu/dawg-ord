@@ -16,16 +16,12 @@ import           Data.DAWG.Gen.Graph (Graph)
 import qualified Data.DAWG.Int.Dynamic.Node as N
 
 
--- | A directed acyclic word graph with phantom type @a@
--- representing the type of alphabet symbols (type @a@ must provide
--- an 'Enum' instance).
---
--- A DAWG is, semantically, a map from keys (sequences of @a@'s) to
--- integral values.
--- See 'Data.DAWG.Ord' for a more generic version of DAWGs.
-data DAWG a = DAWG
+-- | A directed acyclic word graph (DAWG), which can be seen as a map
+-- from keys (sequences of 'Sym`'s) to values 'Val'.
+-- See "Data.DAWG.Ord" for a more generic version of DAWGs.
+data DAWG = DAWG
     { graph :: !(Graph N.Node)
-    -- | Root of the DAWG.
+    -- | The root (start state) of the DAWG.
     , root  :: !ID }
     deriving (Show, Eq, Ord)
 

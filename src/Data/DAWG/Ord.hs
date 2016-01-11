@@ -1,4 +1,4 @@
--- | A version of 'Data.DAWG.Int' adapted to keys and values with
+-- | A version of "Data.DAWG.Int" adapted to keys and values with
 -- 'Ord' instances.
 
 

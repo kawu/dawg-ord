@@ -176,27 +176,26 @@ subPairs g i =
 
 
 -- | Empty DAWG.
-empty :: DAWG a
+empty :: DAWG
 empty =
     let (i, g) = S.runState insertLeaf G.empty
     in  DAWG g i
 
 
 -- | Number of states in the automaton.
-numStates :: DAWG a -> Int
+numStates :: DAWG -> Int
 numStates = G.size . graph
 
 
--- | Number of edges in the automaton.
-numEdges :: DAWG a -> Int
+-- | Number of transitions in the automaton.
+numEdges :: DAWG -> Int
 numEdges = sum . map (length . N.edges) . G.nodes . graph
 
 
 -- | Insert the (key, value) pair into the DAWG.
-insert :: Enum a => [a] -> Val -> DAWG a -> DAWG a
-insert xs' y d =
-    let xs = map fromEnum xs'
-        (i, g) = S.runState (insertM xs y $ root d) (graph d)
+insert :: [Sym] -> Val -> DAWG -> DAWG
+insert xs y d =
+    let (i, g) = S.runState (insertM xs y $ root d) (graph d)
     in  DAWG g i
 {-# INLINE insert #-}
 
@@ -206,32 +205,23 @@ insert xs' y d =
 -- key does not exist in the DAWG. If the key does exist, the function
 -- will insert the pair (key, f new_value old_value).
 insertWith
-    :: Enum a => (Val -> Val -> Val)
-    -> [a] -> Val -> DAWG a -> DAWG a
-insertWith f xs' y d =
-    let xs = map fromEnum xs'
-        (i, g) = S.runState (insertWithM f xs y $ root d) (graph d)
+    :: (Val -> Val -> Val)
+    -> [Sym] -> Val -> DAWG -> DAWG
+insertWith f xs y d =
+    let (i, g) = S.runState (insertWithM f xs y $ root d) (graph d)
     in  DAWG g i
-{-# SPECIALIZE insertWith
-        :: (Val -> Val -> Val) -> String -> Val
-        -> DAWG Char -> DAWG Char #-}
 
 
 -- | Delete the key from the DAWG.
-delete :: Enum a => [a] -> DAWG a -> DAWG a
-delete xs' d =
-    let xs = map fromEnum xs'
-        (i, g) = S.runState (deleteM xs $ root d) (graph d)
+delete :: [Sym] -> DAWG -> DAWG
+delete xs d =
+    let (i, g) = S.runState (deleteM xs $ root d) (graph d)
     in  DAWG g i
-{-# SPECIALIZE delete :: String -> DAWG Char -> DAWG Char #-}
 
 
 -- | Find value associated with the key.
-lookup :: Enum a => [a] -> DAWG a -> Maybe Val
-lookup xs' d =
-    let xs = map fromEnum xs'
-    in  S.evalState (lookupM xs $ root d) (graph d)
-{-# SPECIALIZE lookup :: String -> DAWG Char -> Maybe Val #-}
+lookup :: [Sym] -> DAWG -> Maybe Val
+lookup xs d = S.evalState (lookupM xs $ root d) (graph d)
 
 
 -- -- | Find all (key, value) pairs such that key is prefixed
@@ -248,51 +238,40 @@ lookup xs' d =
 
 
 -- | Return all key/value pairs in the DAWG in ascending key order.
-assocs :: Enum a => DAWG a -> [([a], Val)]
-assocs
-    = map (first (map toEnum))
-    . (subPairs <$> graph <*> root)
-{-# SPECIALIZE assocs :: DAWG Char -> [(String, Val)] #-}
+assocs :: DAWG -> [([Sym], Val)]
+assocs = subPairs <$> graph <*> root
 
 
 -- | Return all keys of the DAWG in ascending order.
-keys :: Enum a => DAWG a -> [[a]]
+keys :: DAWG -> [[Sym]]
 keys = map fst . assocs
-{-# SPECIALIZE keys :: DAWG Char -> [String] #-}
 
 
 -- | Return all elements of the DAWG in the ascending order of their keys.
-elems :: DAWG a -> [Val]
+elems :: DAWG -> [Val]
 elems = map snd . (subPairs <$> graph <*> root)
 
 
--- | Construct DAWG from the list of (word, value) pairs.
-fromList :: Enum a => [([a], Val)] -> DAWG a
+-- | Construct DAWG from the list of (key, value) pairs.
+fromList :: [([Sym], Val)] -> DAWG
 fromList xs =
     let update t (x, v) = insert x v t
     in  foldl' update empty xs
-{-# INLINE fromList #-}
 
 
--- | Construct DAWG from the list of (word, value) pairs
+-- | Construct DAWG from the list of (key, value) pairs
 -- with a combining function.  The combining function is
 -- applied strictly.
-fromListWith
-    :: Enum a => (Val -> Val -> Val)
-    -> [([a], Val)] -> DAWG a
+fromListWith :: (Val -> Val -> Val) -> [([Sym], Val)] -> DAWG
 fromListWith f xs =
     let update t (x, v) = insertWith f x v t
     in  foldl' update empty xs
-{-# SPECIALIZE fromListWith
-        :: (Val -> Val -> Val)
-        -> [(String, Val)] -> DAWG Char #-}
 
 
--- | Make DAWG from the list of words.  Annotate each word with
--- the @()@ value.
-fromLang :: Enum a => [[a]] -> DAWG a
+-- | Make DAWG from the list of words (by annotating each word with
+-- a dummy value).
+fromLang :: [[Sym]] -> DAWG
 fromLang xs = fromList [(x, 0) | x <- xs]
-{-# SPECIALIZE fromLang :: [String] -> DAWG Char #-}
 
 
 ------------------------------------------------------------
@@ -301,24 +280,22 @@ fromLang xs = fromList [(x, 0) | x <- xs]
 
 
 -- | A list of outgoing edges (automaton transitions).
-edges :: Enum a => ID -> DAWG a -> [(a, ID)]
+edges :: ID -> DAWG -> [(Sym, ID)]
 edges i
     = map (first toEnum)
     . N.edges . G.nodeBy i
     . graph
-{-# SPECIALIZE edges :: ID -> DAWG Char -> [(Char, ID)] #-}
-{-# SPECIALIZE edges :: ID -> DAWG Int  -> [(Int, ID)]  #-}
 
 
 -- | Value stored in the given automaton state.
-value :: ID -> DAWG a -> Maybe Val
+value :: ID -> DAWG -> Maybe Val
 value i = N.value . G.nodeBy i . graph
 
 
 -- | Follow a transition with the given symbol from the given state.
-follow :: Enum a => ID -> a -> DAWG a -> Maybe ID
+follow :: ID -> Sym -> DAWG -> Maybe ID
 follow i x DAWG{..} = flip S.evalState graph $ runMaybeT $
-    followPath [fromEnum x] i
+    followPath [x] i
 
 
 ------------------------------------------------------------

@@ -6,11 +6,11 @@ module Data.DAWG.Gen.Types
 , Val
 ) where
 
--- | Node identifier.
+-- | Identifier of a DAWG node (automaton state).
 type ID = Int
 
--- | Internal representation of an alphabet element.
+-- | A transition symbol.
 type Sym = Int
 
--- | Internal representation of an automaton value.
+-- | A type of DAWG values, stored in accept states.
 type Val = Int

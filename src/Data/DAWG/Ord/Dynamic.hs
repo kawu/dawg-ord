@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 
 
--- | A version of 'Data.DAWG.Int.Dynamic' adapted to
+-- | A version of "Data.DAWG.Int.Dynamic" adapted to
 -- keys and values with 'Ord' instances.
 
 
@@ -56,10 +56,10 @@ import qualified Data.DAWG.Int.Dynamic as D
 -- the type of alphabet symbols (over which keys are constructed)
 -- and type @b@ -- the type of values.
 --
--- A DAWG is, semantically, a map from keys (sequences of @a@'s) to
+-- A DAWG can be seen as a map from keys (sequences of @a@'s) to
 -- values @b@.
 data DAWG a b = DAWG
-    { intDAWG   :: D.DAWG Sym
+    { intDAWG   :: D.DAWG
     , symMap    :: M.Map a Int
     , symMapR   :: M.Map Int a
     , valMap    :: M.Map b Int
@@ -67,7 +67,7 @@ data DAWG a b = DAWG
     } deriving (Show, Eq, Ord)
 
 
--- | Root of the DAWG.
+-- | The root (start state) of the DAWG.
 root :: DAWG a b -> ID
 root = D.root . intDAWG
 
@@ -103,9 +103,10 @@ addKey = mapM addSym
 -- TODO: We could optimize it.
 addVal :: Ord b => b -> DM a b Int
 addVal x = S.state $ \dawg@DAWG{..} ->
-    let y = case M.lookup x valMap of
-            Nothing -> M.size valMap
-            Just k  -> k
+    let y = fromMaybe (M.size valMap) (M.lookup x valMap)
+--     let y = case M.lookup x valMap of
+--             Nothing -> M.size valMap
+--             Just k  -> k
     in  (y, dawg
             { valMap  = M.insert x y valMap
             , valMapR = M.insert y x valMapR })
@@ -125,12 +126,12 @@ empty :: DAWG a b
 empty = DAWG D.empty M.empty M.empty M.empty M.empty
 
 
--- | Number of states in the automaton.
+-- | Number of states in the underlying automaton.
 numStates :: DAWG a b -> Int
 numStates = D.numStates . intDAWG
 
 
--- | Number of edges in the automaton.
+-- | Number of transitions in the underlying automaton.
 numEdges :: DAWG a b -> Int
 numEdges = D.numEdges . intDAWG
 
@@ -168,14 +169,14 @@ insert xs0 y0 dag0 = snd $ flip runDM dag0 $ do
 -- | Find value associated with the key.
 lookup :: (Ord a, Ord b) => [a] -> DAWG a b -> Maybe b
 lookup xs0 DAWG{..} = do
-    xs <- mapM (flip M.lookup symMap) xs0
+    xs <- mapM (`M.lookup` symMap) xs0
     y  <- D.lookup xs intDAWG
     M.lookup y valMapR
 
 
 -- | Return all key/value pairs in the DAWG in ascending key order.
 assocs :: DAWG a b -> [([a], b)]
-assocs DAWG{..} = 
+assocs DAWG{..} =
     [ (decodeKey xs, decodeVal y)
     | (xs, y) <- D.assocs intDAWG ]
   where
@@ -194,15 +195,15 @@ elems :: DAWG a b -> [b]
 elems = map snd . assocs
 
 
--- | Construct DAWG from the list of (word, value) pairs.
+-- | Construct DAWG from the list of (key, value) pairs.
 fromList :: (Ord a, Ord b) => [([a], b)] -> DAWG a b
 fromList xs =
     let update t (x, v) = insert x v t
     in  foldl' update empty xs
 
 
--- | Make DAWG from the list of words.  Annotate each word with
--- the @()@ value.
+-- | Make DAWG from the list of words (annotate each word with
+-- the @()@ value).
 fromLang :: Ord a => [[a]] -> DAWG a ()
 fromLang xs = fromList [(x, ()) | x <- xs]
 
