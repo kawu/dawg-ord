@@ -5,7 +5,7 @@ Directed acyclic word graphs
 
 The library implements *directed acyclic word graphs* (DAWGs) internally
 represented as *minimal acyclic deterministic finite-state automata*.
-The implemented version of DAWG is, semantically, a map from
+The implemented version of DAWG can be seen as a map from
 sequences of alphabet symbols (keys) to values.
 
 The library allows to build DAWGs over any symbols and values
