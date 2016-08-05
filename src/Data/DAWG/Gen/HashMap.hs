@@ -86,7 +86,7 @@ findUnsafe x (Multi m) = M.lookup x m
 
 -- | Convert a regular map into a hash value (and into a 'Single'
 -- form if possible).
-trySingle :: Ord a => M.Map a b -> Value a b
+trySingle :: M.Map a b -> Value a b
 trySingle m = if M.size m == 1
     then uncurry Single (M.findMin m)
     else Multi m

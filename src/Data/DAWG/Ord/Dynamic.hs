@@ -167,7 +167,7 @@ insert xs0 y0 dag0 = snd $ flip runDM dag0 $ do
 
 
 -- | Find value associated with the key.
-lookup :: (Ord a, Ord b) => [a] -> DAWG a b -> Maybe b
+lookup :: (Ord a) => [a] -> DAWG a b -> Maybe b
 lookup xs0 DAWG{..} = do
     xs <- mapM (`M.lookup` symMap) xs0
     y  <- D.lookup xs intDAWG
