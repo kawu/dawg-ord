@@ -113,7 +113,7 @@ remNode i Graph{..} =
 
 -- | Increment the number of ingoing paths.
 incIngo :: ID -> Graph n -> Graph n
-incIngo i g = g { ingoMap = M.insertWith' (+) i 1 (ingoMap g) }
+incIngo i g = g { ingoMap = M.insertWith (+) i 1 (ingoMap g) }
 
 -- | Decrement the number of ingoing paths and return
 -- the resulting number.

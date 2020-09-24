@@ -1,5 +1,5 @@
 name:               dawg-ord
-version:            0.5.0.2
+version:            0.5.1.1
 synopsis:           Directed acyclic word graphs
 description:
     The library implements /directed acyclic word graphs/ (DAWGs) internally
@@ -29,8 +29,8 @@ library
     hs-source-dirs: src
     build-depends:
         base            >= 4        && < 5
-      , containers      >= 0.5      && < 0.6
-      , vector          >= 0.10     && < 0.12
+      , containers      >= 0.5      && < 0.7
+      , vector          >= 0.10     && < 0.13
       , mtl             >= 2.1      && < 2.3
       , transformers    >= 0.3      && < 0.6
 
